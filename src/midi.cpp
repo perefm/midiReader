@@ -48,8 +48,6 @@ namespace Phoenix {
 	{
 		m_isRecording = true;
 		m_startRecordingTime = Clock::now();
-		m_lastSecond = 0.0;
-		m_lastTick = 0;
 	}
 
 
@@ -73,7 +71,6 @@ namespace Phoenix {
 				", tick: " << static_cast<uint32_t>(event->tick) <<
 				", key: " << static_cast<uint32_t>(event->key) <<
 				", data: "  << static_cast<uint32_t>(event->value) <<
-				", deltaTime: " << std::format("{:.5f}", event->deltaTime) <<
 				", absTime: " << std::format("{:.5f}", event->absTime) << std::endl;
 		}
 		std::cout << "Total events: " << events.size() << std::endl;
@@ -95,7 +92,7 @@ namespace Phoenix {
 		for (const auto& event : events) {
 			switch (event->type) {
 			
-			case '0xB0':
+			case 0xB0:
 				// Añadir Control Change (p.ej. controlador 7 = volumen) al tick 240
 				midi.createControlChangeEvent(track, event->tick, 0, event->key, event->value);
 				break;
@@ -142,19 +139,19 @@ namespace Phoenix {
 			switch (event->type()) {
 			case Midi::MidiEvent::EventType::ControlChange:
 			{
-				EventMessage* eventMsg = new EventMessage(0xB0, static_cast<unsigned char>(event->number()), static_cast<unsigned char>(event->value()), static_cast<uint32_t>(event->tick()), deltaTime, eventTime);
+				EventMessage* eventMsg = new EventMessage(0xB0, static_cast<unsigned char>(event->number()), static_cast<unsigned char>(event->value()), static_cast<uint32_t>(event->tick()), eventTime);
 				events.push_back(eventMsg);
 				break;
 			}
 			case Midi::MidiEvent::EventType::NoteOn:
 			{
-				EventMessage* eventMsg = new EventMessage(0x90, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), deltaTime, eventTime);
+				EventMessage* eventMsg = new EventMessage(0x90, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
 				events.push_back(eventMsg); 
 				break;
 			}
 			case Midi::MidiEvent::EventType::NoteOff:
 			{
-				EventMessage* eventMsg = new EventMessage(0x80, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), deltaTime, eventTime);
+				EventMessage* eventMsg = new EventMessage(0x80, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
 				events.push_back(eventMsg); 
 				break;
 			}
@@ -236,23 +233,14 @@ namespace Phoenix {
 			// Capturamos el tiempo real en segundos
 			auto now = Clock::now();
 			double timestamp = std::chrono::duration<double>(now - driver->m_startRecordingTime).count();
-
-			// Capturamos el tiempo actual en segundos y ticks
-			driver->m_lastSecond += deltatime;
-			// Convertir deltaTime a deltaTicks
-			uint32_t deltaTicks = static_cast<uint32_t>(deltatime * driver->TICKS_PER_SECOND);
-			driver->m_lastTick += deltaTicks;
-
-			std::cout << "Time: " << std::format("{:.5f}", driver->m_lastSecond) << "s. ";
-			std::cout << "Abs Time: " << std::format("{:.5f}", timestamp) << "s. ";
-			std::cout << "Delta Time: " << std::format("{:.5f}", deltatime) << "s. ";
-			std::cout << "Tick: " << driver->m_lastTick << " tick. ";
-			std::cout << "Calculated Tick: " << (timestamp * driver->TICKS_PER_SECOND) << " tick. ";
+			uint32_t calculatedTick = static_cast<uint32_t>(timestamp * driver->TICKS_PER_SECOND);
 			
+			std::cout << "Abs Time: " << std::format("{:.5f}", timestamp) << "s. ";
+			std::cout << "Tick: " << calculatedTick << ". ";
 
 			uint32_t nBytes = static_cast<uint32_t>(message->size());
 			if (nBytes >= 3) {
-				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), driver->m_lastTick, deltatime, timestamp);
+				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), calculatedTick, timestamp);
 				driver->events.push_back(event);
 			}
 

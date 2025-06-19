@@ -19,7 +19,6 @@ namespace Phoenix {
 			unsigned char	key;		// control number (key or note)
 			unsigned char	value;		// value (for control) or velocty (for note)
 			uint32_t		tick;		// absolute tick in the song
-			double			deltaTime;	// Delta time provided by the callback
 			double			absTime;		// Absolute time when the event was produced
 		
 			// Comparador para ordenar por tick (menor a mayor)
@@ -60,10 +59,6 @@ namespace Phoenix {
 		const double BPM = 120.0;
 		const int PPQN = 480;			// Pulses per Quarter Note
 		const double TICKS_PER_SECOND = (BPM * PPQN) / 60.0;
-
-
-		uint32_t m_lastTick = 0;
-		double m_lastSecond = 0;
 
 		using Clock = std::chrono::high_resolution_clock;
 		std::chrono::high_resolution_clock::time_point m_startRecordingTime;	// Start recording time
