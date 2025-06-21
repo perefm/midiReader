@@ -19,7 +19,7 @@ namespace Phoenix {
 			unsigned char	key;		// control number (key or note)
 			unsigned char	value;		// value (for control) or velocty (for note)
 			uint32_t		tick;		// absolute tick in the song
-			double			absTime;		// Absolute time when the event was produced
+			double			absTime;	// Absolute time when the event was produced
 		
 			// Comparador para ordenar por tick (menor a mayor)
 			static bool compareByTick(const EventMessage* a, const EventMessage* b) {
@@ -38,7 +38,7 @@ namespace Phoenix {
 		void recordEventsStart();
 		void recordEventsStop();
 		void displayEvents() const;
-		void storeSong(const std::string& filePath) const;
+		void storeSong(const std::string& filePath);
 		void loadSong(const std::string& filePath);
 		void clearDriver();
 		void outputMessage();

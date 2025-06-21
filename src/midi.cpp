@@ -61,39 +61,40 @@ namespace Phoenix {
 
 	void MidiDriver::displayEvents() const
 	{
-		// TODO> hemos de reordenar todos los eventos por tick y luego mostrarlos ordenados.
-		// en caso de que haya duplicados, se guarda el ultimo evento de ese tick.
-		// esto se ha de hacer tambien antes de guardar la cancion.
-
 		std::cout << "MIDI Events:" << std::endl;
 		for (const auto& event : events) {
 			std::cout << "Event type: " << static_cast<uint32_t>(event->type) <<
+				", time: " << std::format("{:.5f}", event->absTime) << 
 				", tick: " << static_cast<uint32_t>(event->tick) <<
 				", key: " << static_cast<uint32_t>(event->key) <<
-				", data: "  << static_cast<uint32_t>(event->value) <<
-				", absTime: " << std::format("{:.5f}", event->absTime) << std::endl;
+				", data: "  << static_cast<uint32_t>(event->value) << std::endl;
+			
 		}
 		std::cout << "Total events: " << events.size() << std::endl;
 	}
 
-	void MidiDriver::storeSong(const std::string& filePath) const
+	void MidiDriver::storeSong(const std::string& filePath)
 	{
 		Midi::MidiFile midi;
 		midi.setResolution(PPQN);
 		
 		int track = midi.createTrack();  // Crear una pista nueva
 
-		// Añadir Note On al tick 0
-		midi.createNoteOnEvent(track, 0, /*canal=*/0, /*nota=*/60, /*velocidad=*/100);
-		
-		// Añadir Note Off manualmente al tick 480
-		midi.createNoteOffEvent(track, 480, /*canal=*/0, /*nota=*/60, /*velocidad=*/0);
+		// TEST: Add note on on tick 0
+		//midi.createNoteOnEvent(track, 0, /*canal=*/0, /*nota=*/60, /*velocidad=*/100);
+		// TEST: Add note off on tick 480 (0.5s)
+		//midi.createNoteOffEvent(track, 480, /*canal=*/0, /*nota=*/60, /*velocidad=*/0);
+
+		// Before storing to midi, let's assure that all events are sorted by tick
+		std::cout << "Sorting events by tick..." << std::endl;
+		std::sort(events.begin(), events.end(), EventMessage::compareByTick);
+		std::cout << "Events sorted!" << std::endl;
+
 
 		for (const auto& event : events) {
 			switch (event->type) {
 			
 			case 0xB0:
-				// Añadir Control Change (p.ej. controlador 7 = volumen) al tick 240
 				midi.createControlChangeEvent(track, event->tick, 0, event->key, event->value);
 				break;
 			
@@ -106,7 +107,6 @@ namespace Phoenix {
 			default:
 				std::cout << "Unsupported event: " << static_cast<uint32_t>(event->type) << std::endl;
 			}
-			
 		}
 
 		if (!midi.save(filePath)) {
@@ -234,13 +234,15 @@ namespace Phoenix {
 			auto now = Clock::now();
 			double timestamp = std::chrono::duration<double>(now - driver->m_startRecordingTime).count();
 			uint32_t calculatedTick = static_cast<uint32_t>(timestamp * driver->TICKS_PER_SECOND);
+			double calculatedTime = static_cast<float>(calculatedTick) / driver->TICKS_PER_SECOND;
 			
-			std::cout << "Abs Time: " << std::format("{:.5f}", timestamp) << "s. ";
-			std::cout << "Tick: " << calculatedTick << ". ";
+			std::cout << "Real TimeStamp: " << std::format("{:.5f}s. ", timestamp) <<
+				"Calc Time: " << std::format("{:.5f}s. ", calculatedTime) <<
+				"Calc Tick: " << calculatedTick << ". ";
 
 			uint32_t nBytes = static_cast<uint32_t>(message->size());
 			if (nBytes >= 3) {
-				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), calculatedTick, timestamp);
+				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), calculatedTick, calculatedTime);
 				driver->events.push_back(event);
 			}
 
