@@ -192,24 +192,35 @@ namespace Phoenix {
 		}
 
 		// Open first available port.
-		midiout->openPort(0);
+		midiout->openPort(1);
 
 		// Send out a series of MIDI messages.
+		std::vector<unsigned char> keys = {46,43,44,42,41,45, 32, 48, 64, 33, 49, 65};
 
-		// Control Change: 176, 7, 100 (volume)
-		message.push_back(176);
-		message.push_back(48);
-		message.push_back(127);
-		midiout->sendMessage(&message);
+		message.push_back(0xB0);
+		message.push_back(42);
+		message.push_back(0x7F);
 
-		
-		std::this_thread::sleep_for(std::chrono::seconds(2)); // Espera 2 segundos
 
-		// Control Change: 176, 7, 100 (volume)
-		message[0] = 176;
-		message[1] = 48;
-		message[2] = 0;
-		midiout->sendMessage(&message);
+		// Turn on the keys
+		for (const auto& key : keys) {
+			message[0] = 0xB0;
+			message[1] = key;
+			message[2] = 0x7F;
+			midiout->sendMessage(&message);
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		// Turn on the keys
+		for (const auto& key : keys) {
+			message[0] = 0xB0;
+			message[1] = key;
+			message[2] = 0;
+			midiout->sendMessage(&message);
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		}
 
 		delete midiout;
 
