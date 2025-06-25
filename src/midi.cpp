@@ -201,8 +201,15 @@ namespace Phoenix {
 		message.push_back(42);
 		message.push_back(0x7F);
 
+		// Blank all keys
+		for (const auto& key : keys) {
+			message[0] = 0xB0;
+			message[1] = key;
+			message[2] = 0x00;
+			midiout->sendMessage(&message);
+		}
 
-		// Turn on the keys
+		// Turn on the keys in sequence
 		for (const auto& key : keys) {
 			message[0] = 0xB0;
 			message[1] = key;
@@ -213,7 +220,7 @@ namespace Phoenix {
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-		// Turn on the keys
+		// Turn on the keys in sequence
 		for (const auto& key : keys) {
 			message[0] = 0xB0;
 			message[1] = key;

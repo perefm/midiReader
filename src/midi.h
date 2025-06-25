@@ -42,7 +42,6 @@ namespace Phoenix {
 		void loadSong(const std::string& filePath);
 		void clearDriver();
 		void outputMessage();
-		
 
 		std::string getVersion();
 		uint32_t getEventsSize() { return static_cast<uint32_t>(events.size()); };

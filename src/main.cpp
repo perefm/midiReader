@@ -3,6 +3,7 @@
 //#include "rtmidi/rtmidi.h"
 //#include <wolf-midi/MidiFile.h>
 #include <midi.h>
+#include <midiKeyMapping.h>
 #include "main.h"
 
 using namespace Phoenix;
@@ -10,9 +11,16 @@ using namespace Phoenix;
 int main()
 {
 	MidiDriver* midiDriver = new MidiDriver();
+    MidiKeyMapping midiKey;
 
     char selection;
     char no_one_cares;
+
+    if (!midiKey.loadMidiKeyMapping("files/nanokontrol2.spmidi")) {
+        std::cout << "Errors found in config file (spmidi file), press any key to continue..." << std::endl;
+        std::cin >> no_one_cares;
+    }
+        
 
     do {
 		// Clear the console
