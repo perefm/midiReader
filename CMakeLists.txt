@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_TOOLCHAIN_FILE "../vcpkg/scripts/buildsystems/vcpkg.cmake")
-project(rtmidi_test)
+project(midiReader)
 set(CMAKE_CXX_STANDARD 20)
 
 if (MSVC)

@@ -235,6 +235,11 @@ namespace Phoenix {
 
 	}
 
+	bool MidiDriver::loadKeyMapping(const std::string& filePath)
+	{
+		return keys.loadMidiKeyMapping(filePath);
+	}
+
 	std::string MidiDriver::getVersion()
 	{
 		return midiin->getVersion();

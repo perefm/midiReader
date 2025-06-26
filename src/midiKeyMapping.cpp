@@ -119,7 +119,6 @@ namespace Phoenix {
 
 	bool MidiKeyMapping::loadMidiKeyMapping(std::string_view filepath)
 	{
-
 		std::string m_scriptData = readASCIIFile(filepath);
 
 		std::istringstream f(m_scriptData);
@@ -153,6 +152,33 @@ namespace Phoenix {
 			}
 		}
 		return loadingOK;
+	}
+
+	bool MidiKeyMapping::saveMidiKeyMapping(std::string_view filepath) const
+	{
+		std::ofstream outFile(filepath.data());
+		if (!outFile) {
+			return false;
+		}
+
+		outFile << "; Auto-saved file with midi mapping\n";
+		for (const auto& key : midiKeys) {
+			outFile << key.m_keyName << " " << key.m_keyNumber << "\n";
+		}
+
+		outFile.close();
+		return true;
+	}
+
+	void MidiKeyMapping::displayMidiKeyMapping() const
+	{
+		std::cout << "MIDI Key Mapping:" << std::endl;
+		for (const auto& key : midiKeys) {
+			std::cout << "Key: " << key.m_keyName <<
+				", Number: " << key.m_keyNumber <<
+				", Value: " << key.m_keyValue << std::endl;
+		}
+		std::cout << "Total keys: " << midiKeys.size() << std::endl;
 	}
 
 }

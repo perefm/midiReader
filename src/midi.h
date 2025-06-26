@@ -10,6 +10,9 @@
 #include "rtmidi/rtmidi.h"
 #include <wolf-midi/MidiFile.h>
 
+// Key Mapping
+#include "midiKeyMapping.h"
+
 namespace Phoenix {
 
 	class MidiDriver final {
@@ -42,6 +45,8 @@ namespace Phoenix {
 		void loadSong(const std::string& filePath);
 		void clearDriver();
 		void outputMessage();
+		bool loadKeyMapping(const std::string& filePath);
+
 
 		std::string getVersion();
 		uint32_t getEventsSize() { return static_cast<uint32_t>(events.size()); };
@@ -66,6 +71,8 @@ namespace Phoenix {
 
 	public:
 		uint32_t nPorts = 0;
+		MidiKeyMapping keys;
+
 
 	};
 }

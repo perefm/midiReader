@@ -27,6 +27,8 @@ namespace Phoenix {
 	public:
 
 		bool loadMidiKeyMapping(std::string_view filepath);
+		bool saveMidiKeyMapping(std::string_view filepath) const;
+		void displayMidiKeyMapping() const;
 		
 		MidiKey* findMidiKeyByName(std::string_view keyName);
 		MidiKey* findMidiKeyByNumber(const uint32_t keyNumber);
