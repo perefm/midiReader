@@ -262,6 +262,16 @@ namespace Phoenix {
 		return keys.loadMidiKeyMapping(filePath);
 	}
 
+	void MidiDriver::updateKeyValue(unsigned char key, unsigned char value)
+	{
+		auto* keyToUpdate = keys.findMidiKeyByNumber(key);
+		if (keyToUpdate) {
+			keyToUpdate->m_keyValue = value; // Update the key value
+		} else {
+			std::cout << "Key not found in mapping! Value cannot be set" << std::endl;
+		}
+	}
+
 	std::string MidiDriver::getVersion()
 	{
 		return midiin->getVersion();
@@ -286,13 +296,13 @@ namespace Phoenix {
 			if (nBytes >= 3) {
 				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), calculatedTick, calculatedTime);
 				driver->events.push_back(event);
+				driver->updateKeyValue(message->at(1), message->at(2)); // Update the key value in the mapping
 			}
 
 			// Display the captured MIDI message
 			for (uint32_t i = 0; i < nBytes; i++)
 				std::cout << "Byte " << i << " = " << (int)message->at(i) << ", ";
-
-			std::cout << std::endl;
+				std::cout << std::endl;
 		}
         
     }
@@ -302,7 +312,7 @@ namespace Phoenix {
 		auto* driver = static_cast<MidiDriver*>(userData);
 		if (driver && driver->m_isKeyMapping) {
 			if (driver->keys.mapCurrentKey(message->at(1)))
-				std::cout << "Key: " << driver->keys.findCurrentKey()->m_keyName << " mapped to midi ID: " << driver->keys.findCurrentKey()->m_keyNumber;
+				std::cout << "Key: " << driver->keys.findCurrentKey()->m_keyName << " mapped to midi ID: " << driver->keys.findCurrentKey()->m_keyNumber << std::endl;
 			else
 				std::cout << "Current key cannot be mapped, out of bounds!" << std::endl;
 				

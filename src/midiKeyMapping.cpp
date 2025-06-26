@@ -156,7 +156,7 @@ namespace Phoenix {
 
 	bool MidiKeyMapping::mapCurrentKey(uint32_t keyNumber)
 	{
-		if (midiKeys.size() < m_recordMappedKey) {
+		if (m_recordMappedKey < midiKeys.size()) {
 			midiKeys[m_recordMappedKey].m_keyNumber = keyNumber;
 			return true;
 		}

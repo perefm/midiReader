@@ -48,6 +48,7 @@ namespace Phoenix {
 		void clearDriver();
 		void outputMessage();
 		bool loadKeyMapping(const std::string& filePath);
+		void updateKeyValue(unsigned char key, unsigned char value);
 
 
 		std::string getVersion();
