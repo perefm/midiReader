@@ -127,22 +127,29 @@ namespace Phoenix {
 
 	void MidiKeyMapping::recordKeyMapping()
 	{
-		char selection;
-		char key = 0;
+		char selection = -1;
+		uint32_t key = 0;
 		std::cout << "Record mapping started...\n"; 
-		std::cout << "	Press ENTER to move no next key.\n";
-		std::cout << "	Press Q to exit." << std::endl;
+		std::cout << "Press ENTER to move to next key.\n";
+		std::cout << "Press Q to exit.\n";
+
+		// Ignorar cualquier carácter sobrante en el buffer (como un ENTER anterior)
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 		do {
 			m_recordMappedKey = key;
-			std::cout << "Capturing key: " << midiKeys[key].m_keyName <<std::endl;
+			auto* midiKey = findCurrentKey();
+			if (midiKey)
+				std::cout << "Capturing key: " << midiKey->m_keyName << std::endl;
+			else
+				std::cout << "Error! Key not valid!" << std::endl;
+
 			selection = std::cin.get();
 			if (selection == '\n') {
 				key++;
 				if (key >= midiKeys.size())
-					selection = 'q';
+					key = 0;
 			}
-				
 		} while (selection != 'q' && selection != 'Q');
 		std::cout << "Mapping finished!\n";
 	}
