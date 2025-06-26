@@ -47,16 +47,38 @@ namespace Phoenix {
 	void MidiDriver::recordEventsStart()
 	{
 		m_isRecording = true;
+		m_isKeyMapping = false;
+		midiin->cancelCallback();
+		midiin->setCallback(&captureEvent, this); // Make sure we have the correct callback (captureEvent)
 		m_startRecordingTime = Clock::now();
 	}
 
-
 	void MidiDriver::recordEventsStop()
 	{
-		m_isRecording = false;
-		std::cout << "Sorting events by tick..." << std::endl;
-		std::sort(events.begin(), events.end(), EventMessage::compareByTick);
-		std::cout << "Events sorted!" << std::endl;
+		if (m_isRecording) {
+			m_isRecording = false;
+			std::cout << "Sorting events by tick..." << std::endl;
+			std::sort(events.begin(), events.end(), EventMessage::compareByTick);
+			std::cout << "Events sorted!" << std::endl;
+		}		
+	}
+
+	void MidiDriver::recordMappingStart()
+	{
+		if (m_isRecording) {
+			std::cout << "Event recording was enabled, so stopping it first..." << std::endl;
+			recordEventsStop();
+		}
+		m_isKeyMapping = true;
+		midiin->cancelCallback();
+		midiin->setCallback(&captureKeyMapping, this); // Make sure we have the correct callback (keyMapping)
+		keys.recordKeyMapping();
+		recordMappingStop();
+	}
+
+	void MidiDriver::recordMappingStop()
+	{
+		m_isKeyMapping = false;
 	}
 
 	void MidiDriver::displayEvents() const
@@ -247,9 +269,6 @@ namespace Phoenix {
 
     void MidiDriver::captureEvent(double deltatime, std::vector<unsigned char>* message, void* userData)
     {
-		//Hey un bug: Si reseteamos la grabacion el deltaTime deberia valer cero de nuevo, pero no lo hace.
-
-
 		auto* driver = static_cast<MidiDriver*>(userData);
 		if (driver && driver->m_isRecording) {
 
@@ -277,5 +296,18 @@ namespace Phoenix {
 		}
         
     }
+
+	void MidiDriver::captureKeyMapping(double deltatime, std::vector<unsigned char>* message, void* userData)
+	{
+		auto* driver = static_cast<MidiDriver*>(userData);
+		if (driver && driver->m_isKeyMapping) {
+			if (driver->keys.mapCurrentKey(message->at(1)))
+				std::cout << "Key: " << driver->keys.findCurrentKey()->m_keyName << " mapped to midi ID: " << driver->keys.findCurrentKey()->m_keyNumber;
+			else
+				std::cout << "Current key cannot be mapped, out of bounds!" << std::endl;
+				
+		}
+
+	}
 
 }

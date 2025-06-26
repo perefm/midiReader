@@ -13,11 +13,10 @@ int main()
     
 
     char selection;
-    char no_one_cares;
 
     do {
 		// Clear the console
-		std::system("clear || cls"); // "cls" for Windows, "clear" for Unix-like systems
+		std::system("cls"); // "cls" for Windows, "clear" for Unix-like systems
         std::cout << "\n--- Spontz useless tools presents... the infamous MIDI reader! ---\n";
         std::cout << "\nRtMidi version: " << midiDriver->getVersion();
 		std::cout << "\nAvailable MIDI ports: " << midiDriver->nPorts;
@@ -43,9 +42,11 @@ int main()
 		}
 
 
-        std::cin >> selection;
+        //std::cin >> selection;
+        selection = std::cin.get();
 
         switch (selection) {
+        case '\n':
         case '0':
             break;
         case '1':
@@ -59,70 +60,67 @@ int main()
             break;
         case '4':
             midiDriver->recordEventsStop();
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case '5':
             midiDriver->displayEvents();
             std::cout << "--------------------------\n";
             std::cout << "Total events displayed: " << midiDriver->getEventsSize() << std::endl;
-            std::cout << "Press any key to get back to menu..." << std::endl;
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case '6':
             midiDriver->storeSong("files/shitty.mid");
-
-            std::cout << "Press any key to get back to menu..." << std::endl;
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case '7':
             midiDriver->loadSong("files/shitty.mid");
-            std::cout << "Press any key to get back to menu..." << std::endl;
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case '8':
             midiDriver->outputMessage();
-            std::cout << "Press any key to go back to menu.";
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case 'h':
         case 'H':
             if (!midiDriver->keys.loadMidiKeyMapping("files/keymapping.spmidi")) {
-                std::cout << "Errors found in config file (spmidi file), press any key to continue..." << std::endl;
-                std::cin >> no_one_cares;
+                std::cout << "Errors found in config file (spmidi file).\n";
+                std::system("pause");
             }
             else {
-                std::cout << "Mapping loaded OK, press any key to continue...";
-                std::cin >> no_one_cares;
+                std::cout << "Mapping loaded OK.\n";
+                std::system("pause");
             }
             break;
         case 'j':
         case 'J':
-             std::cout << "Re-Map not implemented yet, press any key to continue..." << std::endl;
-             std::cin >> no_one_cares;
+            midiDriver->recordMappingStart();
+            std::system("pause");
             break;
         case 'k':
         case 'K':
             midiDriver->keys.displayMidiKeyMapping();
-            std::cin >> no_one_cares;
+            std::system("pause");
             break;
         case 'l':
         case 'L':
             if (!midiDriver->keys.saveMidiKeyMapping("files/keymapping.spmidi")) {
-                std::cout << "Errors found saving config file (spmidi file), press any key to continue..." << std::endl;
-                std::cin >> no_one_cares;
+                std::cout << "Errors found saving config file (spmidi file).\n";
+                std::system("pause");
             }
             else {
-                std::cout << "Mapping saved OK, press any key to continue...";
-                std::cin >> no_one_cares;
+                std::cout << "Mapping saved OK.\n";
+                std::system("pause");
             }
             break;
         case 'q':
         case 'Q':
             midiDriver->clearDriver();
-            std::cout << "Bye!" << std::endl;
+            std::cout << "Bye!\n";
+            std::system("pause");
             break;
         default:
             std::cout << "Not a vlaid option, try again please!" << std::endl;
+            std::system("pause");
         }
 
     } while (selection != 'q' && selection != 'Q');

@@ -117,6 +117,55 @@ namespace Phoenix {
 		return nullptr;
 	}
 
+	MidiKeyMapping::MidiKey* MidiKeyMapping::findCurrentKey()
+	{
+		if (m_recordMappedKey < midiKeys.size())
+			return &midiKeys[m_recordMappedKey];
+		else
+			return nullptr;
+	}
+
+	void MidiKeyMapping::recordKeyMapping()
+	{
+		char selection;
+		char key = 0;
+		std::cout << "Record mapping started...\n"; 
+		std::cout << "	Press ENTER to move no next key.\n";
+		std::cout << "	Press Q to exit." << std::endl;
+
+		do {
+			m_recordMappedKey = key;
+			std::cout << "Capturing key: " << midiKeys[key].m_keyName <<std::endl;
+			selection = std::cin.get();
+			if (selection == '\n') {
+				key++;
+				if (key >= midiKeys.size())
+					selection = 'q';
+			}
+				
+		} while (selection != 'q' && selection != 'Q');
+		std::cout << "Mapping finished!\n";
+	}
+
+	bool MidiKeyMapping::mapCurrentKey(uint32_t keyNumber)
+	{
+		if (midiKeys.size() < m_recordMappedKey) {
+			midiKeys[m_recordMappedKey].m_keyNumber = keyNumber;
+			return true;
+		}
+		return false;
+	}
+
+	bool MidiKeyMapping::mapKey(std::string_view keyName, uint32_t keyNumber)
+	{
+		auto* key = findMidiKeyByName(keyName);
+		if (key) {
+			key->m_keyNumber = keyNumber;
+			return true;
+		}
+		return false;
+	}
+
 	bool MidiKeyMapping::loadMidiKeyMapping(std::string_view filepath)
 	{
 		std::string m_scriptData = readASCIIFile(filepath);
@@ -141,15 +190,11 @@ namespace Phoenix {
 			}
 
 			std::pair<std::string, std::string> s_line = splitIn2Lines(line);
-			// check if its a known key
-			MidiKey* midiKey = findMidiKeyByName(s_line.first);
-			if (!midiKey) {
+			if (!mapKey(s_line.first, atoi(s_line.second.c_str())) ) {
 				std::cout << "Could not find key: " << s_line.first << std::endl;
 				loadingOK = false;
 			}
-			else {
-				midiKey->m_keyNumber = atoi(s_line.second.c_str());
-			}
+
 		}
 		return loadingOK;
 	}

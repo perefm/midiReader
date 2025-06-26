@@ -40,6 +40,8 @@ namespace Phoenix {
 		void clearMemory();
 		void recordEventsStart();
 		void recordEventsStop();
+		void recordMappingStart();
+		void recordMappingStop();
 		void displayEvents() const;
 		void storeSong(const std::string& filePath);
 		void loadSong(const std::string& filePath);
@@ -55,10 +57,12 @@ namespace Phoenix {
 	private:
 		// Midi Callbacks
 		static void captureEvent(double deltatime, std::vector<unsigned char>* message, void* userData);
+		static void captureKeyMapping(double deltatime, std::vector<unsigned char>* message, void* userData);
 		
 	private:
 		RtMidiIn* midiin = nullptr;
-		bool m_isRecording = false;
+		bool m_isRecording = false;		// Used to capture midi events
+		bool m_isKeyMapping = false;	// Used to re-map midi keys
 		
 		const double BPM = 120.0;
 		const int PPQN = 480;			// Pulses per Quarter Note
