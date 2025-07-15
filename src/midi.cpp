@@ -13,16 +13,12 @@ namespace Phoenix {
 
 	MidiDriver::MidiDriver()
 	{
-		midiin = new RtMidiIn();
+		// Create a device just to get the ports and few info
+		RtMidiIn* midiin = new RtMidiIn();
 		// Check available ports.
-		nPorts = midiin->getPortCount();
-		if (nPorts != 0) {
-			midiin->openPort(0); // Hardcoded to open the first available port.
-		}
-		// Set the callback function for incoming MIDI messages.
-		midiin->setCallback(&captureEvent, this);
-		// Don't ignore sysex, timing, or active sensing messages.
-		midiin->ignoreTypes(false, false, false);
+		m_numPorts = midiin->getPortCount();
+		m_version = midiin->getVersion();
+		delete midiin;
 	}
 
 	MidiDriver::~MidiDriver()
@@ -30,13 +26,33 @@ namespace Phoenix {
 		clearDriver();
 	}
 
-	void MidiDriver::openMidiPort(uint32_t port)
+	void MidiDriver::openAllPorts()
 	{
+		// Create a device just to get the ports
+		RtMidiIn* midiin = new RtMidiIn();
 		// Check available ports.
-		nPorts = midiin->getPortCount();
-		if (nPorts > port) {
-			midiin->openPort(port);
+		m_numPorts = midiin->getPortCount();
+		delete midiin;
+
+		// Open and configure all available IN ports
+		for (uint32_t i = 0; i < m_numPorts; ++i) {
+			RtMidiIn* deviceIn = new RtMidiIn();
+			deviceIn->openPort(i);
+			// Set the callback function for incoming MIDI messages.
+			deviceIn->setCallback(&captureEvent, this);
+			// Don't ignore sysex, timing, or active sensing messages.
+			deviceIn->ignoreTypes(false, false, false);
+			m_deviceIn.push_back(deviceIn);
 		}
+	}
+
+	void MidiDriver::closeAllPorts()
+	{
+		// Close all ports
+		for (auto* deviceIn : m_deviceIn) {
+			deviceIn->closePort();
+		}
+		m_deviceIn.clear();
 	}
 
 	void MidiDriver::clearMemory()
@@ -48,8 +64,10 @@ namespace Phoenix {
 	{
 		m_isRecording = true;
 		m_isKeyMapping = false;
-		midiin->cancelCallback();
-		midiin->setCallback(&captureEvent, this); // Make sure we have the correct callback (captureEvent)
+		for (auto* deviceIn : m_deviceIn) {
+			deviceIn->cancelCallback();
+			deviceIn->setCallback(&captureEvent, this); // Make sure we have the correct callback (captureEvent)
+		}
 		m_startRecordingTime = Clock::now();
 	}
 
@@ -70,8 +88,10 @@ namespace Phoenix {
 			recordEventsStop();
 		}
 		m_isKeyMapping = true;
-		midiin->cancelCallback();
-		midiin->setCallback(&captureKeyMapping, this); // Make sure we have the correct callback (keyMapping)
+		for (auto* deviceIn : m_deviceIn) {
+			deviceIn->cancelCallback();
+			deviceIn->setCallback(&captureKeyMapping, this); // Make sure we have the correct callback (keyMapping)
+		}
 		keys.recordKeyMapping();
 		recordMappingStop();
 	}
@@ -191,13 +211,7 @@ namespace Phoenix {
 	void MidiDriver::clearDriver()
 	{
 		recordEventsStop();
-		midiin->closePort();
-
-		// Clean up
-		if (midiin != nullptr) {
-			delete midiin;
-			midiin = nullptr;
-		}			
+		closeAllPorts();
 	}
 
 	void MidiDriver::outputMessage()
@@ -206,8 +220,8 @@ namespace Phoenix {
 		std::vector<unsigned char> message;
 
 		// Check available ports.
-		unsigned int nPorts = midiout->getPortCount();
-		if (nPorts == 0) {
+		unsigned int m_numPorts = midiout->getPortCount();
+		if (m_numPorts == 0) {
 			std::cout << "No ports available!\n";
 			delete midiout;
 			return;
@@ -272,9 +286,17 @@ namespace Phoenix {
 		}
 	}
 
+	std::string MidiDriver::getDeviceName(uint32_t device)
+	{
+		if (device >= m_deviceIn.size())
+			return "Device not valid";
+		else
+			return m_deviceIn[device]->getPortName(device);
+	}
+
 	std::string MidiDriver::getVersion()
 	{
-		return midiin->getVersion();
+		return m_version;
 	}
 
     void MidiDriver::captureEvent(double deltatime, std::vector<unsigned char>* message, void* userData)

@@ -13,16 +13,22 @@ int main()
     
 
     char selection;
+    uint32_t devicesIn = 0;
 
     do {
 		// Clear the console
 		std::system("cls"); // "cls" for Windows, "clear" for Unix-like systems
         std::cout << "\n--- Spontz useless tools presents... the infamous MIDI reader! ---\n";
         std::cout << "\nRtMidi version: " << midiDriver->getVersion();
-		std::cout << "\nAvailable MIDI ports: " << midiDriver->nPorts;
+		std::cout << "\nAvailable MIDI ports: " << midiDriver->m_numPorts;
+        devicesIn = midiDriver->getNumDevices();
+        std::cout << "\nMIDI devices opened: " << devicesIn;
+        for (uint32_t i=0; i< devicesIn; ++i) {
+            std::cout << "\nMIDI device " << i << " - Name: " << midiDriver->getDeviceName(i);
+        }
         std::cout << "\nEvents stored: " << midiDriver->getEventsSize() << std::endl;
         std::cout << "0. Show this menu :)\n";
-        std::cout << "1. Re-open midi devices.\n";
+        std::cout << "1. Open all available midi IN devices.\n";
         std::cout << "2. Clear memory (events, song, etc...).\n";
         std::cout << "3. Record midi events and store in memory.\n";
         std::cout << "4. Stop recording midi events.\n";
@@ -50,7 +56,7 @@ int main()
         case '0':
             break;
         case '1':
-            midiDriver->openMidiPort(0);
+            midiDriver->openAllPorts();
             break;
         case '2':
             midiDriver->clearMemory();
