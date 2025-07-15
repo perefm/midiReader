@@ -125,7 +125,7 @@ int main()
             std::system("pause");
             break;
         default:
-            std::cout << "Not a vlaid option, try again please!" << std::endl;
+            std::cout << "Not a valid option, try again please!" << std::endl;
             std::system("pause");
         }
 
