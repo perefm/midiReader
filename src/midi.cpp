@@ -34,6 +34,9 @@ namespace Phoenix {
 		m_numPorts = midiin->getPortCount();
 		delete midiin;
 
+		// First close all ports
+		closeAllPorts();
+
 		// Open and configure all available IN ports
 		for (uint32_t i = 0; i < m_numPorts; ++i) {
 			RtMidiIn* deviceIn = new RtMidiIn();
@@ -48,8 +51,12 @@ namespace Phoenix {
 
 	void MidiDriver::closeAllPorts()
 	{
+		// Stop all events recording or mapping
+		recordEventsStop();
+		recordMappingStop();
 		// Close all ports
 		for (auto* deviceIn : m_deviceIn) {
+			deviceIn->cancelCallback();
 			deviceIn->closePort();
 		}
 		m_deviceIn.clear();
