@@ -11,24 +11,13 @@
 #include <wolf-midi/MidiFile.h>
 
 // Key Mapping
+#include "midiEvents.h"
+// Key Mapping
 #include "midiKeyMapping.h"
 
 namespace Phoenix {
 
 	class MidiDriver final {
-
-		struct EventMessage final {
-			unsigned char	type;		// 0xB0 + channel
-			unsigned char	key;		// control number (key or note)
-			unsigned char	value;		// value (for control) or velocty (for note)
-			uint32_t		tick;		// absolute tick in the song
-			double			absTime;	// Absolute time when the event was produced
-		
-			// Comparador para ordenar por tick (menor a mayor)
-			static bool compareByTick(const EventMessage* a, const EventMessage* b) {
-				return a->tick < b->tick;
-			}
-		};
 
 	public:
 		MidiDriver();
@@ -43,7 +32,8 @@ namespace Phoenix {
 		void recordEventsStop();
 		void recordMappingStart();
 		void recordMappingStop();
-		void displayEvents() const;
+		void displayEvents();
+		void triggerEvents();
 		void storeSong(const std::string& filePath);
 		void loadSong(const std::string& filePath);
 		void clearDriver();
@@ -54,7 +44,7 @@ namespace Phoenix {
 		std::string getDeviceName(uint32_t device);
 
 		std::string getVersion();
-		uint32_t getEventsSize() { return static_cast<uint32_t>(events.size()); };
+		uint32_t getEventsSize() { return static_cast<uint32_t>(m_events.events.size()); };
 		bool isRecording() { return m_isRecording; };
 
 	private:
@@ -65,6 +55,7 @@ namespace Phoenix {
 	private:
 		std::vector<RtMidiIn*> m_deviceIn;
 		bool m_isRecording = false;		// Used to capture midi events
+		bool m_isTriggering = false;	// Used to trigger events
 		bool m_isKeyMapping = false;	// Used to re-map midi keys
 		
 		const uint32_t BPM = 120;
@@ -74,7 +65,9 @@ namespace Phoenix {
 		using Clock = std::chrono::high_resolution_clock;
 		std::chrono::high_resolution_clock::time_point m_startRecordingTime;	// Start recording time
 
-		std::vector<EventMessage*> events;
+		MidiEvents m_events;
+
+		//std::vector<EventMessage*> events;
 
 	public:
 		std::string	m_version;

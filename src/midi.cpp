@@ -64,7 +64,7 @@ namespace Phoenix {
 
 	void MidiDriver::clearMemory()
 	{
-		events.clear();
+		m_events.clearEvents();
 	}
 
 	void MidiDriver::recordEventsStart()
@@ -83,7 +83,7 @@ namespace Phoenix {
 		if (m_isRecording) {
 			m_isRecording = false;
 			std::cout << "Sorting events by tick..." << std::endl;
-			std::sort(events.begin(), events.end(), EventMessage::compareByTick);
+			m_events.sortEvents();
 			std::cout << "Events sorted!" << std::endl;
 		}		
 	}
@@ -108,18 +108,14 @@ namespace Phoenix {
 		m_isKeyMapping = false;
 	}
 
-	void MidiDriver::displayEvents() const
+	void MidiDriver::displayEvents()
 	{
-		std::cout << "MIDI Events:" << std::endl;
-		for (const auto& event : events) {
-			std::cout << "Event type: " << static_cast<uint32_t>(event->type) <<
-				", time: " << std::format("{:.5f}", event->absTime) << 
-				", tick: " << static_cast<uint32_t>(event->tick) <<
-				", key: " << static_cast<uint32_t>(event->key) <<
-				", data: "  << static_cast<uint32_t>(event->value) << std::endl;
-			
-		}
-		std::cout << "Total events: " << events.size() << std::endl;
+		m_events.displayEvents();
+	}
+
+	void MidiDriver::triggerEvents()
+	{
+		m_events.triggerEvents();
 	}
 
 	void MidiDriver::storeSong(const std::string& filePath)
@@ -136,11 +132,11 @@ namespace Phoenix {
 
 		// Before storing to midi, let's assure that all events are sorted by tick
 		std::cout << "Sorting events by tick..." << std::endl;
-		std::sort(events.begin(), events.end(), EventMessage::compareByTick);
+		m_events.sortEvents();
 		std::cout << "Events sorted!" << std::endl;
 
 
-		for (const auto& event : events) {
+		for (const auto& event : m_events.events) {
 			switch (event->type) {
 			
 			case 0xB0:
@@ -188,20 +184,17 @@ namespace Phoenix {
 			switch (event->type()) {
 			case Midi::MidiEvent::EventType::ControlChange:
 			{
-				EventMessage* eventMsg = new EventMessage(0xB0, static_cast<unsigned char>(event->number()), static_cast<unsigned char>(event->value()), static_cast<uint32_t>(event->tick()), eventTime);
-				events.push_back(eventMsg);
+				m_events.addEvent(0xB0, static_cast<unsigned char>(event->number()), static_cast<unsigned char>(event->value()), static_cast<uint32_t>(event->tick()), eventTime);
 				break;
 			}
 			case Midi::MidiEvent::EventType::NoteOn:
 			{
-				EventMessage* eventMsg = new EventMessage(0x90, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
-				events.push_back(eventMsg); 
+				m_events.addEvent(0x90, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
 				break;
 			}
 			case Midi::MidiEvent::EventType::NoteOff:
 			{
-				EventMessage* eventMsg = new EventMessage(0x80, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
-				events.push_back(eventMsg); 
+				m_events.addEvent(0x80, static_cast<unsigned char>(event->note()), static_cast<unsigned char>(event->velocity()), static_cast<uint32_t>(event->tick()), eventTime);
 				break;
 			}
 
@@ -306,7 +299,7 @@ namespace Phoenix {
 		return m_version;
 	}
 
-    void MidiDriver::captureEvent(double deltatime, std::vector<unsigned char>* message, void* userData)
+	void MidiDriver::captureEvent(double deltatime, std::vector<unsigned char>* message, void* userData)
     {
 		auto* driver = static_cast<MidiDriver*>(userData);
 		if (driver && driver->m_isRecording) {
@@ -323,8 +316,7 @@ namespace Phoenix {
 
 			uint32_t nBytes = static_cast<uint32_t>(message->size());
 			if (nBytes >= 3) {
-				EventMessage* event = new EventMessage(message->at(0), message->at(1), message->at(2), calculatedTick, calculatedTime);
-				driver->events.push_back(event);
+				driver->m_events.addEvent(message->at(0), message->at(1), message->at(2), calculatedTick, calculatedTime);
 				driver->updateKeyValue(message->at(1), message->at(2)); // Update the key value in the mapping
 			}
 

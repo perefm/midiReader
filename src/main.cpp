@@ -36,6 +36,7 @@ int main()
         std::cout << "6. Store events to song (files/shitty.midi).\n"; 
         std::cout << "7. Load song (files/shitty.midi): CAUTION: This will delete the stored memory events.\n";
         std::cout << "8. Output message.\n";
+        std::cout << "9. Trigger events (aka. play song).\n";
         std::cout << "H. Load key mapping file (files/keymapping.spmidi).\n";
         std::cout << "J. Re-Map midi keys.\n";
         std::cout << "K. Show keys mapping.\n";
@@ -84,6 +85,10 @@ int main()
             break;
         case '8':
             midiDriver->outputMessage();
+            std::system("pause");
+            break;
+        case '9':
+            midiDriver->triggerEvents();
             std::system("pause");
             break;
         case 'h':
