@@ -248,18 +248,23 @@ namespace Phoenix {
 		}
 
 		// Open first available port.
-		midiout->openPort(1);
+		midiout->openPort(m_numPorts-1);
 
 		// Send out a series of MIDI messages.
-		std::vector<unsigned char> keys = {46,43,44,42,41,45, 32, 48, 64, 33, 49, 65};
+		std::vector<unsigned char> keys;
 
-		message.push_back(0xB0);
-		message.push_back(42);
-		message.push_back(0x7F);
+		// Change the color of the 40 pads of the AKAI MK2 APC KEY25
+		for (uint32_t i = 0; i < 40; i++) {
+			keys.push_back(i);
+		}
+
+		message.push_back(0x00);
+		message.push_back(0);
+		message.push_back(5);
 
 		// Blank all keys
 		for (const auto& key : keys) {
-			message[0] = 0xB0;
+			message[0] = 0x90;
 			message[1] = key;
 			message[2] = 0x00;
 			midiout->sendMessage(&message);
@@ -267,22 +272,22 @@ namespace Phoenix {
 
 		// Turn on the keys in sequence
 		for (const auto& key : keys) {
-			message[0] = 0xB0;
+			message[0] = 0x90;
 			message[1] = key;
-			message[2] = 0x7F;
+			message[2] = rand()%256;// Random color
 			midiout->sendMessage(&message);
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 		// Turn on the keys in sequence
 		for (const auto& key : keys) {
-			message[0] = 0xB0;
+			message[0] = 0x90;
 			message[1] = key;
 			message[2] = 0;
 			midiout->sendMessage(&message);
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 
 		delete midiout;
