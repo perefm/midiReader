@@ -126,9 +126,7 @@ namespace Phoenix {
 		auto start = std::chrono::high_resolution_clock::now();
 
 		while (true) {
-			double elapsed = std::chrono::duration<double>(
-				std::chrono::high_resolution_clock::now() - start
-			).count();
+			double elapsed = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count();
 
 			bool done = m_events.triggerEvents(elapsed);
 			if (done)
