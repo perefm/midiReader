@@ -36,6 +36,7 @@ namespace Phoenix {
 		MidiEvents();
 		~MidiEvents();
 
+		void resetEventsTrigger();
 		void clearEvents();
 		void sortEvents();
 		void displayEvents() const;
@@ -47,9 +48,12 @@ namespace Phoenix {
 	public:
 
 		bool triggerEvents();
+		bool triggerEvents(double currentTime);
 
 	private:
 		using Clock = std::chrono::high_resolution_clock;
+		size_t currentIndex = 0;  // Index of the next event to trigger, if we need to start payback agaiun, we need to reset this
+
 
 	};
 }

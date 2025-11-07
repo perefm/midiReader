@@ -115,7 +115,29 @@ namespace Phoenix {
 
 	void MidiDriver::triggerEvents()
 	{
-		m_events.triggerEvents();
+		//m_isTriggering = true;
+		//m_events.triggerEvents();
+		//m_isTriggering = false;
+
+		m_isTriggering = true;
+
+		m_events.resetEventsTrigger();
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+		while (true) {
+			double elapsed = std::chrono::duration<double>(
+				std::chrono::high_resolution_clock::now() - start
+			).count();
+
+			bool done = m_events.triggerEvents(elapsed);
+			if (done)
+				break;
+
+			// Do other stuff (rendering, audio mixing, etc.)
+		}
+
+		m_isTriggering = false;
 	}
 
 	void MidiDriver::storeSong(const std::string& filePath)

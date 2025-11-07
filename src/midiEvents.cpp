@@ -19,6 +19,13 @@ namespace Phoenix {
 	{
 	}
 
+	void MidiEvents::resetEventsTrigger()
+	{
+		for (auto& e : events)
+			e->triggered = false;
+		currentIndex = 0;
+	}
+
 	void MidiEvents::clearEvents()
 	{
 		events.clear();
@@ -53,7 +60,7 @@ namespace Phoenix {
 	{
 		auto ResetStart = Clock::now();
 		std::cout << "Resetting all events in queue..." << std::endl;
-		for (const auto& event : events) {
+		for (auto& event : events) {
 			event->triggered = false;
 		}
 		double ResetDuration = std::chrono::duration<double>(Clock::now() - ResetStart).count();
@@ -65,25 +72,66 @@ namespace Phoenix {
 
 		// Trigger events - to fix... quick and dirty
 		auto TimeStart = Clock::now();
-		bool exitLoop = false;
-		while (!exitLoop) {
-			auto CurrentTime = std::chrono::duration<double>(Clock::now() - TimeStart).count();
+		
+		// Keep track of where we are in the vector
+		size_t currentIndex = 0;
 
-			for (const auto& event : events) {
-				if (event->absTime > CurrentTime)
-					break;
-				if (!event->triggered && event->absTime <= CurrentTime) {
-					//std::cout << "At time: " << CurrentTime << " - Event triggered!" << event->key << " event time is: " << event->absTime << std::endl;
-					//if ((event->absTime - CurrentTime) > 0.00001)
-					//	std::cout << "Too late! Current time:" << CurrentTime << " Event time is: " << event->absTime << std::endl;
-					event->triggered = true;
-				}
+		const size_t total = events.size();
+
+		while (currentIndex < total) {
+			double CurrentTime = std::chrono::duration<double>(Clock::now() - TimeStart).count();
+
+			// Get the next event to trigger
+			EventMessage* ev = events[currentIndex];
+
+			// Wait until it's time to trigger this event
+			if (CurrentTime >= ev->absTime && !ev->triggered) {
+				std::cout << "At time: " << CurrentTime
+					<< " - Event triggered! Key=" << (int)ev->key
+					<< " event time=" << ev->absTime << std::endl;
+
+				ev->triggered = true;
+				currentIndex++;
 			}
-			if (CurrentTime > 10)
-				exitLoop = true;
+			else {
+				// Sleep a bit to avoid busy waiting
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
 
+			// Example condition to stop after all events or 10 seconds
+			if (CurrentTime > 10)
+				break;
 		}
-		return false;
+		return true;
+	}
+
+	bool MidiEvents::triggerEvents(double currentTime)
+	{
+		// Assume events are already sorted by absTime
+		while (currentIndex < events.size()) {
+			EventMessage* ev = events[currentIndex];
+
+			// If the next event is in the future, stop here (nothing else to trigger yet)
+			if (ev->absTime > currentTime)
+				break;
+
+			// Trigger all events that should have happened by now
+			if (!ev->triggered) {
+				std::cout << "Trigger event (key=" << (int)ev->key
+					<< ", time=" << ev->absTime
+					<< ", current=" << currentTime << ")\n";
+				ev->triggered = true;
+
+				// Here you can actually send it to a MIDI output or event handler
+				// midiOut->sendMessage(...);
+			}
+
+			// Move to next event
+			++currentIndex;
+		}
+
+		// Return true when all events have been triggered
+		return currentIndex >= events.size();
 	}
 
 	
